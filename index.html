@@ -6,33 +6,51 @@
     <title>탈모 자가 진단 미래 예측 AI 웹앱</title>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --primary-color: #4a90e2;
+            --secondary-color: #f39c12;
+            --background-color: #f5f7fa;
+            --text-color: #333;
+            --card-background: #ffffff;
+            --shadow-color: rgba(0, 0, 0, 0.1);
+        }
+
         body {
-            font-family: 'Roboto', sans-serif;
-            background-color: #f0f4f8;
-            color: #333;
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
             line-height: 1.6;
             margin: 0;
             padding: 0;
         }
+
         .container {
             max-width: 1200px;
             margin: 0 auto;
             padding: 20px;
         }
-        h1 {
+
+        h1, h2, h3 {
+            color: var(--primary-color);
             text-align: center;
-            color: #2c3e50;
-            margin-bottom: 30px;
         }
+
         .card {
-            background-color: #fff;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            padding: 20px;
-            margin-bottom: 20px;
+            background-color: var(--card-background);
+            border-radius: 15px;
+            box-shadow: 0 10px 20px var(--shadow-color);
+            padding: 30px;
+            margin-bottom: 30px;
+            transition: all 0.3s ease;
         }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px var(--shadow-color);
+        }
+
         .button-group {
             display: flex;
             justify-content: center;
@@ -40,211 +58,208 @@
             margin-bottom: 30px;
             flex-wrap: wrap;
         }
+
         button {
-            background-color: #3498db;
+            background-color: var(--primary-color);
             color: #fff;
             border: none;
             padding: 12px 24px;
             font-size: 16px;
-            border-radius: 4px;
+            border-radius: 30px;
             cursor: pointer;
-            transition: background-color 0.3s ease;
-            flex: 1 1 auto;
-            max-width: 200px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px var(--shadow-color);
         }
+
         button:hover {
-            background-color: #2980b9;
+            background-color: #3a7bd5;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px var(--shadow-color);
         }
-        #home-button {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background-color: #e74c3c;
-            z-index: 1000;
-        }
-        #home-button:hover {
-            background-color: #c0392b;
-        }
-        .image-container {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            margin-top: 30px;
-        }
-        @media(min-width: 768px) {
-            .image-container {
-                flex-direction: row;
-            }
-        }
-        .image-card {
-            flex-basis: 48%;
-        }
-        #webcam-container, #captured-image, #uploaded-image {
-            width: 100%;
-            max-width: 100%;
-            height: auto;
-            border-radius: 8px;
-            overflow: hidden;
-        }
-        .result-container {
-            display: flex;
-            align-items: flex-start;
-            flex-direction: column;
-        }
-        @media(min-width: 768px) {
-            .result-container {
-                flex-direction: row;
-            }
-        }
-        .result-image {
-            flex: 0 0 100%;
-            margin-right: 0;
-            margin-bottom: 20px;
-        }
-        @media(min-width: 768px) {
-            .result-image {
-                flex: 0 0 400px;
-                margin-right: 20px;
-                margin-bottom: 0;
-            }
-        }
-        .result-text {
-            flex: 1;
-        }
-        #result-text {
-            font-weight: bold;
-            font-size: 24px;
-            color: #2c3e50;
-            margin-top: 0;
-            margin-bottom: 20px;
-        }
-        #label-container {
-            font-size: 18px;
-        }
+
         #file-input {
             display: none;
         }
+
+        .image-container {
+            width: 100%;
+            max-width: 400px;
+            height: 400px;
+            margin: 0 auto;
+            overflow: hidden;
+            border-radius: 15px;
+            box-shadow: 0 10px 20px var(--shadow-color);
+        }
+
+        .image-container img, #webcam-container canvas {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        #result-text {
+            font-weight: bold;
+            font-size: 24px;
+            color: var(--primary-color);
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        #label-container {
+            margin-top: 20px;
+            font-size: 18px;
+            text-align: center;
+        }
+
         .loading {
             display: none;
             text-align: center;
             margin-top: 20px;
         }
+
         .loading::after {
             content: "분석 중...";
             display: inline-block;
             animation: ellipsis 1.5s infinite;
         }
+
         @keyframes ellipsis {
             0% { content: "분석 중"; }
             33% { content: "분석 중."; }
             66% { content: "분석 중.."; }
             100% { content: "분석 중..."; }
         }
+
         #treatment-buttons {
-            position: fixed;
-            top: 80px;
-            right: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            z-index: 1000;
-        }
-        #treatment-buttons button {
-            background-color: #27ae60;
-        }
-        #treatment-buttons button:hover {
-            background-color: #2ecc71;
-        }
-        #surgery-options {
+            margin-top: 30px;
             display: none;
-            flex-direction: column;
-            gap: 10px;
-            margin-top: 10px;
+            justify-content: center;
+            gap: 15px;
         }
-        #surgery-options button {
-            background-color: #f39c12;
+
+        #future-image {
+            margin: 30px auto 0;
+            display: none;
+            max-width: 400px;
+            height: auto;
+            border-radius: 15px;
+            box-shadow: 0 10px 20px var(--shadow-color);
         }
-        #surgery-options button:hover {
-            background-color: #f1c40f;
+
+        #ai-response {
+            margin-top: 30px;
+            display: none;
+            background-color: #f0f8ff;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 5px 15px var(--shadow-color);
+        }
+
+        #home-button {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            background-color: var(--secondary-color);
+        }
+
+        #home-button:hover {
+            background-color: #e67e22;
+        }
+
+        .light-blue-btn {
+            background-color: #87CEFA; /* 옅은 하늘색 */
+            color: #333; /* 텍스트 색상을 어둡게 하여 대비를 높임 */
+        }
+
+        .light-blue-btn:hover {
+            background-color: #5CACEE; /* 호버 시 약간 더 진한 하늘색 */
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+
+            .card {
+                padding: 20px;
+            }
+
+            .image-container {
+                height: 300px;
+            }
+
+            button {
+                padding: 10px 20px;
+                font-size: 14px;
+            }
+
+            #result-text {
+                font-size: 20px;
+            }
+
+            #label-container {
+                font-size: 16px;
+            }
         }
     </style>
 </head>
 <body>
+    <button id="home-button" onclick="goHome()">홈</button>
     <div class="container">
         <h1>탈모 자가 진단 미래 예측 AI 웹앱</h1>
-        <div id="start-options" class="button-group">
-            <button onclick="initCamera()">카메라 시작</button>
-            <button onclick="document.getElementById('file-input').click()">PC 사진 선택</button>
-        </div>
-        <input type="file" id="file-input" accept="image/*" onchange="handleFileUpload(event)">
-        <button type="button" onclick="processImage()" id="processBtn" style="display: none;">이미지 처리</button>
-        <div class="image-container">
-            <div class="image-card card">
-                <h2>입력 이미지</h2>
+        <div class="card">
+            <div class="button-group">
+                <button onclick="initCamera()">카메라 시작</button>
+                <button onclick="document.getElementById('file-input').click()">PC 사진 선택</button>
+            </div>
+            <input type="file" id="file-input" accept="image/*" onchange="handleFileUpload(event)">
+            <button onclick="processImage()" id="processBtn" style="display: none;">이미지 분석</button>
+            <div class="image-container">
                 <div id="webcam-container"></div>
-                <img id="uploaded-image" style="display:none; max-width: 100%;" />
+                <img id="uploaded-image" style="display:none;" />
             </div>
-            <div class="image-card card">
-                <h2>분석 결과</h2>
-                <div class="result-container">
-                    <div class="result-image">
-                        <img id="captured-image" style="display:none; max-width: 100%;" />
-                    </div>
-                    <div class="result-text">
-                        <p id="result-text"></p>
-                        <div id="label-container"></div>
-                    </div>
+            <div class="loading" id="loading"></div>
+            <p id="result-text"></p>
+            <div id="label-container"></div>
+            <div id="treatment-buttons">
+                <button onclick="showSurgeryOptions()">수술</button>
+                <div id="surgery-options" style="display: none;">
+                    <button onclick="showSurgeryInfo(6)" class="light-blue-btn">6개월</button>
+                    <button onclick="showSurgeryInfo(12)" class="light-blue-btn">12개월</button>
                 </div>
+                <button onclick="showTreatmentInfo()">치료</button>
+            </div>
+            <img id="future-image" src="" alt="예측 이미지">
+            <div id="ai-response">
+                <h3>AI 상담 결과</h3>
+                <p id="ai-text"></p>
             </div>
         </div>
-        <div class="loading" id="loading"></div>
-    </div>
-    <button id="home-button" onclick="goHome()" style="display: none;">홈</button>
-    <div id="treatment-buttons" style="display: none;">
-        <button onclick="showSurgeryOptions()">수술</button>
-        <div id="surgery-options">
-            <button onclick="showSurgeryInfo(6)">6개월</button>
-            <button onclick="showSurgeryInfo(12)">12개월</button>
-        </div>
-        <button onclick="showTreatmentInfo('treatment')">치료</button>
     </div>
 
     <script>
         const URL = "https://teachablemachine.withgoogle.com/models/bZW2DXMuh/";
         let model, webcam, labelContainer, maxPredictions;
         let isCamera = false;
+        let bestMatch = '';
 
         function goHome() {
-            if (webcam) {
-                webcam.stop();
-            }
-            document.getElementById('start-options').style.display = 'flex';
-            document.getElementById('processBtn').style.display = 'none';
-            document.getElementById('webcam-container').innerHTML = '';
-            document.getElementById('uploaded-image').style.display = 'none';
-            document.getElementById('captured-image').style.display = 'none';
-            document.getElementById('label-container').innerHTML = '';
-            document.getElementById('result-text').innerText = '';
-            document.getElementById('home-button').style.display = 'none';
-            document.getElementById('treatment-buttons').style.display = 'none';
-            document.getElementById('surgery-options').style.display = 'none';
-            isCamera = false;
+            location.reload();
         }
 
         async function initCamera() {
             isCamera = true;
             await initModel();
-            document.getElementById('start-options').style.display = 'none';
-            document.getElementById('processBtn').style.display = 'inline-block';
-            document.getElementById('processBtn').innerText = '이미지 캡처';
-            document.getElementById('home-button').style.display = 'block';
-
             const flip = true;
             webcam = new tmImage.Webcam(400, 400, flip);
             await webcam.setup();
             await webcam.play();
             window.requestAnimationFrame(loop);
             document.getElementById("webcam-container").appendChild(webcam.canvas);
+            document.getElementById("processBtn").style.display = "inline-block";
+            document.getElementById("processBtn").innerText = "이미지 분석";
+            document.getElementById("uploaded-image").style.display = "none";
         }
 
         async function initModel() {
@@ -263,46 +278,35 @@
         async function loop() {
             if (isCamera) {
                 webcam.update();
-                await predict(webcam.canvas);
                 window.requestAnimationFrame(loop);
             }
         }
 
-        async function predict(image) {
-            const prediction = await model.predict(image);
+        async function predict(imgElement) {
+            const prediction = await model.predict(imgElement);
+            let maxProb = 0;
             for (let i = 0; i < maxPredictions; i++) {
                 const classPrediction = prediction[i].className + ": " + prediction[i].probability.toFixed(2);
                 labelContainer.childNodes[i].innerHTML = classPrediction;
+                if (prediction[i].probability > maxProb) {
+                    maxProb = prediction[i].probability;
+                    bestMatch = prediction[i].className;
+                }
             }
-            return prediction;
+            document.getElementById('result-text').innerText = `가장 유사한 이미지: ${bestMatch}`;
+            document.getElementById('treatment-buttons').style.display = 'flex';
         }
 
         async function processImage() {
             document.getElementById('loading').style.display = 'block';
             let imageElement;
             if (isCamera) {
-                const canvas = document.createElement('canvas');
-                canvas.width = 400;
-                canvas.height = 400;
-                canvas.getContext('2d').drawImage(webcam.canvas, 0, 0, 400, 400);
-                imageElement = canvas;
+                imageElement = webcam.canvas;
             } else {
                 imageElement = document.getElementById('uploaded-image');
             }
-
-            const capturedImage = document.getElementById('captured-image');
-            capturedImage.src = isCamera ? imageElement.toDataURL('image/jpeg') : imageElement.src;
-            capturedImage.style.display = 'block';
-            capturedImage.style.width = '400px';
-            capturedImage.style.height = '400px';
-            capturedImage.style.objectFit = 'cover';
-
-            const prediction = await predict(imageElement);
-            updateResult(prediction);
+            await predict(imageElement);
             document.getElementById('loading').style.display = 'none';
-
-            document.getElementById('home-button').style.display = 'block';
-            document.getElementById('treatment-buttons').style.display = 'flex';
         }
 
         async function handleFileUpload(event) {
@@ -310,59 +314,76 @@
             if (file) {
                 isCamera = false;
                 await initModel();
-                document.getElementById('start-options').style.display = 'none';
-                document.getElementById('processBtn').style.display = 'inline-block';
-                document.getElementById('processBtn').innerText = '이미지 분석';
-                document.getElementById('home-button').style.display = 'block';
-
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     const uploadedImage = document.getElementById('uploaded-image');
                     uploadedImage.src = e.target.result;
                     uploadedImage.style.display = 'block';
                     document.getElementById('webcam-container').style.display = 'none';
-                    document.getElementById('captured-image').style.display = 'none';
-                    document.getElementById('result-text').innerText = '';
                 }
                 reader.readAsDataURL(file);
+                document.getElementById("processBtn").style.display = "inline-block";
+                document.getElementById("processBtn").innerText = "이미지 분석";
             }
-        }
-
-        function updateResult(prediction) {
-            let maxProb = 0;
-            let bestMatch = '';
-            for (let i = 0; i < maxPredictions; i++) {
-                if (prediction[i].probability > maxProb) {
-                    maxProb = prediction[i].probability;
-                    bestMatch = prediction[i].className;
-                }
-            }
-            document.getElementById('result-text').innerText = `가장 유사한 이미지: ${bestMatch}`;
         }
 
         function showSurgeryOptions() {
             const surgeryOptions = document.getElementById('surgery-options');
-            surgeryOptions.style.display = surgeryOptions.style.display === 'none' ? 'flex' : 'none';
+            surgeryOptions.style.display = surgeryOptions.style.display === 'none' ? 'block' : 'none';
         }
 
         function showSurgeryInfo(months) {
-            let message = '';
+            const aiResponse = getAIResponse(months);
+            document.getElementById('ai-text').innerText = aiResponse;
+            document.getElementById('ai-response').style.display = 'block';
+            
+            showFutureImage(bestMatch, months);
+        }
+
+        function getAIResponse(months) {
             if (months === 6) {
-                message = '6개월 후 예상되는 수술 결과: 모발 이식 후 초기 성장 단계로, 이식된 모발의 약 60-70%가 성장하기 시작합니다. 완전한 결과는 아직 보이지 않을 수 있습니다.';
+                return "6개월 후 예상 결과: 모발 이식 후 초기 성장 단계입니다. 이식된 모발의 약 60-70%가 성장을 시작하며, 새로운 모발선이 형성되기 시작합니다. 이 시기에는 꾸준한 관리가 중요합니다. 의사가 처방한 약물을 규칙적으로 복용하고, 두피 마사지와 영양 관리에 신경 쓰세요. 과도한 자외선 노출을 피하고, 스트레스 관리에도 주의를 기울이세요. 완전한 결과는 아직 보이지 않을 수 있으니 인내심을 가지고 기다리는 것이 중요합니다.";
             } else if (months === 12) {
-                message = '12개월 후 예상되는 수술 결과: 대부분의 이식된 모발이 완전히 성장하여 자연스러운 모발 라인과 밀도를 보입니다. 최종 결과를 확인할 수 있는 시기입니다.';
+                return "12개월 후 예상 결과: 대부분의 이식된 모발이 완전히 성장하여 자연스러운 모발 라인과 밀도를 보입니다. 이 시기에는 최종 결과를 확인할 수 있습니다. 새로운 모발이 건강하게 자랐을 것이며, 전체적인 모발의 볼륨감이 크게 개선되었을 것입니다. 지속적인 관리가 여전히 중요합니다. 정기적인 병원 방문을 통해 진행 상황을 체크하고, 필요에 따라 추가적인 치료나 관리 방법을 상담받으세요. 건강한 생활 습관을 유지하고, 두피와 모발에 맞는 제품을 사용하여 관리하는 것이 좋습니다.";
             }
-            alert(message);
         }
 
-        function showTreatmentInfo(type) {
-            let message = '탈모 치료에는 약물 치료, 레이저 치료, 두피 관리 등 다양한 방법이 있습니다. 개인의 상태에 따라 적절한 치료법을 선택해야 합니다.';
-            alert(message);
+        function showFutureImage(classResult, months) {
+            const futureImage = document.getElementById('future-image');
+            const classNumber = classResult.split(' ')[1].padStart(2, '0');
+            const imagePath = `${classNumber}/${months}m.jpg`;
+            
+            // 이미지 로딩 시작 전 로딩 표시
+            document.getElementById('loading').style.display = 'block';
+            
+            // 이미지 프리로딩
+            const img = new Image();
+            img.onload = function() {
+                futureImage.src = imagePath;
+                futureImage.style.display = 'block';
+                document.getElementById('loading').style.display = 'none';
+            };
+            img.onerror = function() {
+                console.error('이미지를 불러오는 데 실패했습니다.');
+                futureImage.style.display = 'none';
+                document.getElementById('loading').style.display = 'none';
+                alert('미래 예측 이미지를 불러오는 데 실패했습니다. 다시 시도해 주세요.');
+            };
+            img.src = imagePath;
+            
+            // 이미지 로딩 에러 처리
+            futureImage.onerror = function() {
+                console.error('이미지를 불러오는 데 실패했습니다.');
+                futureImage.style.display = 'none';
+                alert('미래 예측 이미지를 불러오는 데 실패했습니다. 다시 시도해 주세요.');
+            };
+            
+            // 이미지 로딩 성공 확인
+            futureImage.onload = function() {
+                console.log('이미지가 성공적으로 로드되었습니다.');
+            };
         }
 
-        window.addEventListener('load', function() {
-            document.getElementById('home-button').addEventListener('click', goHome);
-        });
     </script>
 </body>
 </html>
