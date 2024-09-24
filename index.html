@@ -137,6 +137,15 @@
             gap: 15px;
         }
 
+        .light-blue-btn {
+            background-color: #87CEFA; /* 옅은 하늘색 */
+            color: #333; /* 텍스트 색상을 어둡게 하여 대비를 높임 */
+        }
+
+        .light-blue-btn:hover {
+            background-color: #5CACEE; /* 호버 시 약간 더 진한 하늘색 */
+        }
+
         #future-image {
             margin: 30px auto 0;
             display: none;
@@ -161,19 +170,20 @@
             right: 370px; /* 기존 270px에서 370px로 변경 (270 + 100) */
             z-index: 1000;
             background-color: var(--secondary-color);
+            transition: right 0.3s ease;
         }
 
         #home-button:hover {
             background-color: #e67e22;
         }
 
-        .light-blue-btn {
-            background-color: #87CEFA; /* 옅은 하늘색 */
-            color: #333; /* 텍스트 색상을 어둡게 하여 대비를 높임 */
-        }
-
-        .light-blue-btn:hover {
-            background-color: #5CACEE; /* 호버 시 약간 더 진한 하늘색 */
+        /* 에러 메시지 스타일 추가 */
+        #error-message {
+            display: none;
+            color: red;
+            font-size: 18px;
+            text-align: center;
+            margin-top: 20px;
         }
 
         @media (max-width: 768px) {
@@ -207,7 +217,7 @@
 <body>
     <button id="home-button" onclick="goHome()">홈</button>
     <div class="container">
-        <h1>생성형 AI 기반 탈모 진단 및  미래 예측 시스템</h1>
+        <h1>탈모 자가 진단 미래 예측 AI 웹앱</h1>
         <div class="card">
             <div class="button-group">
                 <button onclick="initCamera()">카메라 시작</button>
@@ -220,6 +230,8 @@
                 <img id="uploaded-image" style="display:none;" />
             </div>
             <div class="loading" id="loading"></div>
+            <!-- 에러 메시지 추가 -->
+            <div id="error-message">인물 사진 또는 얼굴을 카메라 보여 주세요</div>
             <p id="result-text"></p>
             <div id="label-container"></div>
             <div id="treatment-buttons">
@@ -260,6 +272,8 @@
             document.getElementById("processBtn").style.display = "inline-block";
             document.getElementById("processBtn").innerText = "이미지 분석";
             document.getElementById("uploaded-image").style.display = "none";
+            // 에러 메시지 숨기기
+            document.getElementById('error-message').style.display = 'none';
         }
 
         async function initModel() {
@@ -285,20 +299,38 @@
         async function predict(imgElement) {
             const prediction = await model.predict(imgElement);
             let maxProb = 0;
+            let predictedClass = '';
             for (let i = 0; i < maxPredictions; i++) {
                 const classPrediction = prediction[i].className + ": " + prediction[i].probability.toFixed(2);
                 labelContainer.childNodes[i].innerHTML = classPrediction;
                 if (prediction[i].probability > maxProb) {
                     maxProb = prediction[i].probability;
-                    bestMatch = prediction[i].className;
+                    predictedClass = prediction[i].className;
                 }
             }
-            document.getElementById('result-text').innerText = `가장 유사한 이미지: ${bestMatch}`;
-            document.getElementById('treatment-buttons').style.display = 'flex';
+
+            // 신뢰도 임계값 설정 (예: 0.5)
+            const confidenceThreshold = 0.5;
+
+            if (maxProb >= confidenceThreshold) {
+                bestMatch = predictedClass;
+                document.getElementById('result-text').innerText = `가장 유사한 이미지: ${bestMatch}`;
+                document.getElementById('treatment-buttons').style.display = 'flex';
+                document.getElementById('error-message').style.display = 'none';
+            } else {
+                // 얼굴이 아닌 경우 메시지 표시
+                document.getElementById('error-message').style.display = 'block';
+                document.getElementById('result-text').innerText = '';
+                document.getElementById('treatment-buttons').style.display = 'none';
+                document.getElementById('future-image').style.display = 'none';
+                document.getElementById('ai-response').style.display = 'none';
+            }
         }
 
         async function processImage() {
             document.getElementById('loading').style.display = 'block';
+            // 에러 메시지 숨기기
+            document.getElementById('error-message').style.display = 'none';
             let imageElement;
             if (isCamera) {
                 imageElement = webcam.canvas;
@@ -320,6 +352,8 @@
                     uploadedImage.src = e.target.result;
                     uploadedImage.style.display = 'block';
                     document.getElementById('webcam-container').style.display = 'none';
+                    // 에러 메시지 숨기기
+                    document.getElementById('error-message').style.display = 'none';
                 }
                 reader.readAsDataURL(file);
                 document.getElementById("processBtn").style.display = "inline-block";
